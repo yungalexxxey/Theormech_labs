@@ -16,7 +16,7 @@ def Rot(X,Y,Alpha,XC,YC):
     return RX, RY
 def formY(y, t, fV, fOm):
     y1,y2,y3,y4 = y   
-    dydt = [y3,y4,fV(y1,y2,y3,y4),fOm(y1,y2,y3,y4)]
+    dydt = [y3,y4,fV(t,y1,y2,y3,y4),fOm(t,y1,y2,y3,y4)]
     return dydt
 
 # size of the prism
@@ -24,13 +24,13 @@ R=1
 #size of the beam 
 r = 0.1
 #masses of the prism and the beam 
-m1 = 5
-m2 = 1
-M=10
+m1 = 40
+m2 = 10
 g = 9.81
 # coefficients
-w=0.5
-c=2.7
+M_0=25
+w=math.pi
+c=35
 #defining t as a symbol (it will be the independent variable)
 t = sp.Symbol('t')
 
@@ -39,30 +39,28 @@ s=sp.Function('s')(t)
 alpha=sp.Function('alpha')(t)
 V=sp.Function('V')(t)
 om=sp.Function('om')(t)
+M=sp.Function('M')(t)
 #Check the derivating process
 print(sp.diff(5*V**2,V))
 
 #constructing the Lagrange equations
 #1 defining the kinetic energy
-TTR = m1*V**2
+TTR = m1*V**2/2+m1*V**2/4
 #The squared velocity of the center of mass
 # Vc2 = V**2+(om**2)*(r/2**2)/4-V*om*r/2*sp.cos(alpha)
-Vc2 = m2*V**2/2-V*om*r/2*sp.cos(alpha)
-#The moment of inertia
-Jc = (m2*r**2)/12
-TTr = (m2*Vc2)/2+(Jc*om**2)/2
+Vc2 = om**2*r**2+V**2-2*om*V*r*sp.cos(alpha)
+TTr = (m2*Vc2)/2+(m2*r**2)*om**2/2
 TT = TTR+TTr
 #2 defining the potential energy
-Pi1 =M*sp.cos(w*t)
-Pi3 = (c*(s-1)**2/2)
-Pi = Pi1+Pi3
-
-
+Pi1 = -m2*g*r*sp.cos(alpha)
+Pi2=(c*(s-1)**2/2)
+Pi = Pi1+Pi2
 #Lagrange function
+M=M_0*sp.cos(V)/R
 L = TT-Pi
 
 #equations
-ur1 = sp.diff(sp.diff(L,V),t)-sp.diff(L,s)
+ur1 = sp.diff(sp.diff(L,V),t)-sp.diff(L,s)-M
 ur2 = sp.diff(sp.diff(L,om),t)-sp.diff(L,alpha)
 
 #isolating second derivatives(dV/dt and dom/dt) using Kramer's method
@@ -80,14 +78,14 @@ detA2 = a11*b2-b1*a21
 dVdt = detA1/detA
 domdt = detA2/detA
 
-countOfFrames = 50
+countOfFrames = 200
 
 # Constructing the system of differential equations
 T = np.linspace(0, 12, countOfFrames)
 # Pay attention here, the function lambdify translate function from the sympy to numpy and then form arrays much more
 # faster then we did using subs in previous lessons!
-fV = sp.lambdify([s,alpha,V,om], dVdt, "numpy")
-fOm = sp.lambdify([s,alpha,V,om], domdt, "numpy")
+fV = sp.lambdify([t,s,alpha,V,om], dVdt, "numpy")
+fOm = sp.lambdify([t,s,alpha,V,om], domdt, "numpy")
 y0 = [1, 1,-1, -1]
 sol = odeint(formY, y0, T, args = (fV, fOm))
 
@@ -100,7 +98,7 @@ sol = odeint(formY, y0, T, args = (fV, fOm))
 #constructing functions
 
 #Motion of the prism with a spring (translational motion)
-XsprS = sp.lambdify(s, 2+s)
+XsprS = sp.lambdify(s, s+2)
 # YsprS = sp.lambdify(1,1)
 
 #Motion of the beam with respect to a spring (A - the farthest point on the beam from the spring)
@@ -156,11 +154,10 @@ def anima(i):
     conline.set_data([0, XC[i]], [R, R])
     Circ.set_data(XC[i]+R*np.cos(Phi), R+R*np.sin(Phi))
     for phi in Phi:
-        newx, newy = Rot(XC[i] + 0.15 * math.cos(phi), 0.1 + 0.3 * math.sin(phi) + 0.6, Alpha[i]/4, XC[i], R)
+        newx, newy = Rot(XC[i] + 0.15 * math.cos(phi), 0.1 + 0.3 * math.sin(phi) + 0.6, Alpha[i], XC[i], R)
         NewX.append(newx)
         NewY.append(newy)
     Mayatnik.set_data(NewX, NewY)
     return Circ, P, conline, Mayatnik
 anim = FuncAnimation(fig, anima, frames=countOfFrames, interval=60, blit=True)
 plt.show()
-

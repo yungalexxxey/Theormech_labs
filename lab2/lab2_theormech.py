@@ -10,12 +10,11 @@ def Rot(X,Y,Alpha,XC,YC):
 #Ввод переменной t и радиусов необходимых окружностей + ввод угла поворота шариков
 t = sp.Symbol('t')
 R=1
-phi=3*sp.sin(t)
 #Параметрические уравнения трёх окружностей. 1. Большая 2.Малая 3. Окружность. по которой движется большой шар.
-xc = sp.sin(t)+2
-xa = xc-0.05*sp.sin(phi)
-ya = 0.9+0.05*sp.cos(phi)
 Alpha = sp.cos(6*t)/2
+xc = sp.sin(t)+2
+xa = xc-0.05*sp.sin(Alpha)
+ya = 0.9+0.05*sp.cos(Alpha)
 Vx = sp.diff(xc, t)
 Vy = 0*t
 omega = sp.diff(Alpha, t)
@@ -31,6 +30,7 @@ VX = np.zeros_like(T)
 VY = np.zeros_like(T)
 VXA = np.zeros_like(T)
 VYA = np.zeros_like(T)
+# for(int i=0;i<length(T);i++)
 for i in np.arange(len(T)):
     XC[i] = sp.Subs(xc , t , T[i])
     VX[i] = sp.Subs(Vx, t, T[i])

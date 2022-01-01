@@ -65,9 +65,6 @@ ax1.axis('equal')
 #plotting a trajectory
 ax1.plot(X, Y)
 
-#plotting a plane for a disc
-ax1.plot([X.min(), X.max()], [0, 0], 'black')
-
 #plotting initial positions
 
 #of the point A on the disc

@@ -1,13 +1,9 @@
 import numpy as np
-#Note that the next import is required for Matplotlib versions before 3.2.0. 
-#For versions 3.2.0 and higher, you can plot 3D plots without importing
-#from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from scipy.integrate import odeint
 import sympy as sp
 import math
-
 from sympy.series import O
 
 def Rot(X,Y,Alpha,XC,YC):
@@ -46,28 +42,23 @@ om=sp.Function('om')(t)
 
 #constructing the Lagrange equations
 #1 defining the kinetic energy
-TTR = m1*V**2
+TTR = m1*V**2/2+m1*V**2/4
 #The squared velocity of the center of mass
 # Vc2 = V**2+(om**2)*(r/2**2)/4-V*om*r/2*sp.cos(alpha)
-Vc2 = m2*V**2/2-V*om*r/2*sp.cos(alpha)
-#The moment of inertia
-Jc = (m2*r**2)/12
-TTr = (m2*Vc2)/2+(Jc*om**2)/2
+Vc2 = om**2*r**2+V**2-2*om*V*r*sp.cos(alpha)
+TTr = (m2*Vc2)/2+(m2*r**2)*om**2/2
 TT = TTR+TTr
 #2 defining the potential energy
-Pi1 = -m1*g
-Pi2 = m2*g*(-R/2+r*(sp.cos(alpha)))
-Pi3=(c*(s-1)**2/2)
-Pi = Pi1+Pi2+Pi3
-M = -m1*g*sp.cos(alpha);
-
+Pi1 = -m2*g*r*sp.cos(alpha)
+Pi2=(c*(s-1)**2/2)
+Pi = Pi1+Pi2
 #Lagrange function
 L = TT-Pi
 
 #equations
 #ur1 = sp.diff(sp.diff(L,V),t)-sp.diff(L,s)
-ur2 = sp.diff(sp.diff(L,om),t)-sp.diff(L,alpha)-M
-print(ur2);
+ur2 = sp.diff(sp.diff(L,om),t)-sp.diff(L,alpha)
+print(ur2)
 
 #isolating second derivatives(dV/dt and dom/dt) using Kramer's method
 # a11 = ur1.coeff(sp.diff(V,t),1)
@@ -85,7 +76,7 @@ b2 = -ur2.coeff(sp.diff(om,t),0).subs(sp.diff(alpha,t), om);
 domdt = b2/a22
 print(domdt)
 
-countOfFrames = 200
+countOfFrames = 400
 
 # Constructing the system of differential equations
 T = np.linspace(0, 12, countOfFrames)
@@ -147,7 +138,7 @@ ax2 = fig.add_subplot(4, 2, 2)
 ax2.plot(T, sol[:,0])
 
 ax2.set_xlabel('T')
-ax2.set_ylabel('V')
+ax2.set_ylabel('Phi')
 
 ax3 = fig.add_subplot(4, 2, 4)
 ax3.plot(T, sol[:,1])
@@ -164,11 +155,11 @@ def anima(i):
     conline.set_data([0, XC[i]], [R, R])
     Circ.set_data(XC[i]+R*np.cos(Phi), R+R*np.sin(Phi))
     for phi in Phi:
-        newx, newy = Rot(XC[i] + 0.15 * math.cos(phi), 0.1 + 0.3 * math.sin(phi) + 0.6, (Alpha[i]+60)/2, XC[i], R)
+        newx, newy = Rot(XC[i] + 0.15 * math.cos(phi), 0.1 + 0.3 * math.sin(phi) + 0.6, Alpha[i], XC[i], R)
         NewX.append(newx)
         NewY.append(newy)
     Mayatnik.set_data(NewX, NewY)
     return Circ, P, conline, Mayatnik
-anim = FuncAnimation(fig, anima, frames=countOfFrames, interval=100, blit=True)
+anim = FuncAnimation(fig, anima, frames=countOfFrames, interval=60, blit=True)
 plt.show()
 
